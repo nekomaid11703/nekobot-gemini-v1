@@ -1,0 +1,13 @@
+node_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+
+# Evitar fuga de credenciales de WhatsApp (Baileys)
+src/database/auth/creds.json
+auth/
+*creds*.json

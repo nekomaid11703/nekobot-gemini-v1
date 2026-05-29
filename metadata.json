@@ -1,0 +1,6 @@
+{
+  "name": "RolBotV1 Optimizer & Workbench",
+  "description": "Plataforma visual e interactiva para auditar, simular, optimizar y expandir el código de RolBotV1, un bot RPG de WhatsApp modular.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

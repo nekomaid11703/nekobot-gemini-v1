@@ -1,0 +1,76 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. Global Safety Net (Default-Deny Catch-all)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-+@\\.]+$');
+    }
+
+    // Helper functions for incoming and existing data
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // RPG Character Validation
+    function isValidCharacter(data) {
+      return data.keys().hasAll(['creatorId', 'name', 'category', 'stats', 'isActive'])
+        && data.keys().size() <= 8
+        && data.creatorId is string && data.creatorId.size() <= 100
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 40
+        && data.category is string && data.category.size() <= 5
+        && data.stats is map
+        && data.isActive is bool;
+    }
+
+    // Rule matches for Firestore collections mapped in firebase-blueprint.json
+    match /characters/{characterId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() 
+        && isValidId(characterId)
+        && isValidCharacter(incoming())
+        && isOwner(incoming().creatorId)
+        && (incoming().stats.fuerza is int && incoming().stats.fuerza <= 100)
+        && (incoming().stats.agilidad is int && incoming().stats.agilidad <= 100)
+        && (incoming().stats.vida is int && incoming().stats.vida <= 300)
+        && (incoming().stats.mana is int && incoming().stats.mana <= 200);
+
+      allow update: if isSignedIn()
+        && isValidId(characterId)
+        && isValidCharacter(incoming())
+        && isOwner(existing().creatorId)
+        && isOwner(incoming().creatorId)
+        && incoming().name == existing().name // Immutability rule for name
+        && incoming().diff(existing()).affectedKeys().hasOnly(['stats', 'slots', 'isActive', 'updatedAt']);
+
+      allow delete: if isSignedIn()
+        && isValidId(characterId)
+        && isOwner(existing().creatorId);
+    }
+
+    match /sessions/{phoneNumber} {
+      allow read: if isSignedIn() && (request.auth.uid == phoneNumber || request.auth.token.email == 'admin@rolbot.v1');
+      allow write: if isSignedIn() && (request.auth.uid == phoneNumber || request.auth.token.email == 'admin@rolbot.v1')
+        && incoming().keys().hasAll(['phoneNumber', 'encryptedCreds'])
+        && incoming().phoneNumber is string && incoming().phoneNumber.size() <= 20
+        && incoming().encryptedCreds is string && incoming().encryptedCreds.size() <= 10000;
+    }
+  }
+}

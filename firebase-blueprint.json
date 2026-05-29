@@ -1,0 +1,76 @@
+{
+  "entities": {
+    "Character": {
+      "title": "Ficha de Personaje RPG",
+      "description": "Ficha que contiene las estadísticas de RPG de un jugador en RolBotV1",
+      "type": "object",
+      "properties": {
+        "creatorId": {
+          "type": "string",
+          "description": "ID de WhatsApp / JID del creador del personaje"
+        },
+        "creatorName": {
+          "type": "string",
+          "description": "Nombre de usuario del creador para fines de clasificación"
+        },
+        "name": {
+          "type": "string",
+          "description": "Nombre único del personaje dentro de la simulación"
+        },
+        "category": {
+          "type": "string",
+          "description": "Rango de fuerza (D, C, B, A, S)",
+          "enum": ["E", "D", "C", "B", "A", "S", "SS"]
+        },
+        "stats": {
+          "type": "object",
+          "description": "Estadísticas asignadas (fuerza, agilidad, vida, mana)"
+        },
+        "slots": {
+          "type": "object",
+          "description": "Ranuras de equipamiento asignadas (arma, amuleto, etc.)"
+        },
+        "isActive": {
+          "type": "boolean",
+          "description": "Determina si el personaje está cargado por defecto en la partida"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Hora de la última actualización del héroe"
+        }
+      },
+      "required": ["creatorId", "name", "category", "stats", "isActive"]
+    },
+    "SessionCredentials": {
+      "title": "Credenciales Cifradas de WhatsApp",
+      "description": "Información securizada de acceso para Baileys para evitar filtraciones en git",
+      "type": "object",
+      "properties": {
+        "phoneNumber": {
+          "type": "string",
+          "description": "Teléfono vinculado"
+        },
+        "encryptedCreds": {
+          "type": "string",
+          "description": "Cifrado de credenciales de Baileys"
+        },
+        "checksum": {
+          "type": "string",
+          "description": "Verificador de integridad del payload"
+        }
+      },
+      "required": ["phoneNumber", "encryptedCreds"]
+    }
+  },
+  "firestore": {
+    "/characters/{characterId}": {
+      "schema": "Character",
+      "description": "Colección global persistente para fichas RPG de RolBotV1"
+    },
+    "/sessions/{phoneNumber}": {
+      "schema": "SessionCredentials",
+      "description": "Almacenamiento remoto e inviolable para credenciales de vinculaciones de WhatsApp"
+    }
+  }
+}
